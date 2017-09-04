@@ -7,8 +7,12 @@ systemd:
         [Unit]
         Description=CoreOS matchbox Server
         Documentation=https://github.com/coreos/matchbox
+        Requires=network-online.target
+        After=network-online.target
 
         [Service]
+        Slice=machine.slice
+        KillMode=mixed
         Environment="IMAGE=quay.io/coreos/matchbox"
         Environment="VERSION=v0.6.1"
         Environment="MATCHBOX_ADDRESS=0.0.0.0:8080"
@@ -25,7 +29,9 @@ systemd:
           --volume data,kind=host,source=/var/lib/matchbox \
           --volume config,kind=host,source=/etc/matchbox \
           ${IMAGE}:${VERSION}
-
+        ExecStopPost=/usr/bin/rkt gc --mark-only
+        Restart=always
+        
         [Install]
         WantedBy=multi-user.target
     - name: dnsmasq.service
@@ -33,8 +39,13 @@ systemd:
       contents: |
         [Unit]
         Description=dnsmasq
+        # Wait for networking
+        Requires=network-online.target
+        After=network-online.target
         
         [Service]
+        Slice=machine.slice
+        KillMode=mixed
         Environment="IMAGE=quay.io/coreos/dnsmasq"
         Environment="VERSION=v0.4.1"
         ExecStartPre=/usr/bin/mkdir /var/lib/tftproot
@@ -51,9 +62,8 @@ systemd:
           --mount volume=tftproot,target=/var/lib/tftproot \
           ${IMAGE}:${VERSION} \
           -- -d -C /etc/dnsmasq/dnsmasq.conf -R -S 8.8.8.8
-        TimeoutStartSec=0
+        ExecStopPost=/usr/bin/rkt gc --mark-only
         Restart=always
-        RestartSec=10
         
         [Install]
         WantedBy=multi-user.target
