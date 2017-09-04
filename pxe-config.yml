@@ -1,4 +1,62 @@
 ---
+systemd:
+  units:
+    - name: matchbox.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=CoreOS matchbox Server
+        Documentation=https://github.com/coreos/matchbox
+
+        [Service]
+        Environment="IMAGE=quay.io/coreos/matchbox"
+        Environment="VERSION=v0.6.1"
+        Environment="MATCHBOX_ADDRESS=0.0.0.0:8080"
+        Environment="MATCHBOX_RPC_ADDRESS=0.0.0.0:8081"
+        Environment="MATCHBOX_LOG_LEVEL=debug"
+        ExecStartPre=/usr/bin/mkdir -p /etc/matchbox
+        ExecStartPre=/usr/bin/mkdir -p /var/lib/matchbox/assets
+        ExecStart=/usr/bin/rkt run \
+          --net=host \
+          --inherit-env \
+          --trust-keys-from-https \
+          --mount volume=data,target=/var/lib/matchbox \
+          --mount volume=config,target=/etc/matchbox \
+          --volume data,kind=host,source=/var/lib/matchbox \
+          --volume config,kind=host,source=/etc/matchbox \
+          ${IMAGE}:${VERSION}
+
+        [Install]
+        WantedBy=multi-user.target
+    - name: dnsmasq.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=dnsmasq
+        ExecStartPre=/usr/bin/mkdir /etc/dnsmasq
+        ExecStartPre=/usr/bin/mkdir /var/lib/tftproot
+        ExecStartPre=/usr/bin/wget -nc -q -O "/var/lib/tftproot/undionly.kpxe" "http://boot.ipxe.org/undionly.kpxe"
+        ExecStartPre=cp /var/lib/tftproot/undionly.kpxe /var/lib/tftproot/undionly.kpxe.0
+        
+        [Service]
+        Environment="IMAGE=quay.io/coreos/dnsmasq"
+        Environment="VERSION=v0.4.1"
+        ExecStart=/usr/bin/rkt run \
+          --hostname=matchbox.drewfus.org \
+          --net=host \
+          --volume etc-dnsmasq,kind=host,source=/etc/dnsmasq \
+          --volume tftproot,kind=host,source=/var/lib/tftproot \
+          --mount volume=etc-dnsmasq,target=/etc/dnsmasq \
+          --mount volume=tftproot,target=/var/lib/tftproot \
+          ${IMAGE}:${VERSION} \
+          -- -d -C /etc/dnsmasq/dnsmasq.conf -R -S 8.8.8.8
+        TimeoutStartSec=0
+        Restart=always
+        RestartSec=10
+        
+        [Install]
+        WantedBy=multi-user.target
+
 storage:
   files:
     - filesystem: "root"
@@ -6,6 +64,41 @@ storage:
       mode:       0644
       contents:
         inline: matchbox.drewfus.org
+    - filesystem: "root"
+      path: "/etc/dnsmasq.conf"
+      mode: 0644
+      contents:
+        inline: |
+          dhcp-match=set:ipxe,175
+
+          # if request comes from older PXE ROM, chainload to iPXE (via TFTP)
+          dhcp-boot=tag:!ipxe,undionly.kpxe
+
+          # point ipxe tagged requests to the matchbox iPXE boot script (via HTTP)
+          dhcp-boot=tag:ipxe,http://matchbox.drewfus.org:8080/boot.ipxe
+
+          # verbose
+          log-queries
+          log-dhcp
+
+          enable-tftp
+          tftp-root=/var/lib/tftproot
+
+          dhcp-range=172.17.8.10,172.17.8.254,30m
+
+          # static DNS assignements
+          address=/matchbox.drewfus.org/172.17.8.1
+          address=/core-1.drewfus.org/172.17.8.2
+          address=/core-2.drewfus.org/172.17.8.3
+          address=/core-3.drewfus.org/172.17.8.4
+
+          # default GW [node need external access to fetch containers]
+          dhcp-option=3,172.17.8.1
+
+          # assign fixed hostname and ip address to the nodes
+          #dhcp-host=00:50:56:20:AE:A6,node1,172.17.8.21,infinite
+          #dhcp-host=00:50:56:3C:0E:1A,node2,172.17.8.22,infinite
+
 passwd:
   users:
     - name: core
