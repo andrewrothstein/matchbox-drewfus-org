@@ -1,4 +1,22 @@
 ---
+networkd:
+  units:
+    - name: 10-static.network
+      contents: |
+        [Match]
+        Name=enp6s0
+
+        [Network]
+        Address=172.17.8.1/24
+        Gateway=172.17.8.1
+    - name: 20-dhcp.network
+      contents: |
+        [Match]
+        Name=enp3s0f0
+
+        [Network]
+        DHCP=yes
+
 systemd:
   units:
     - name: iptables-restore.service
@@ -103,7 +121,7 @@ storage:
       mode: 0644
       contents:
         inline: |
-          except-interface=enp3s0f0
+          interface=enp6s0
           dhcp-match=set:ipxe,175
 
           # if request comes from older PXE ROM, chainload to iPXE (via TFTP)
