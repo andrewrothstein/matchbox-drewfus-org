@@ -33,23 +33,25 @@ systemd:
       contents: |
         [Unit]
         Description=dnsmasq
-        ExecStartPre=/usr/bin/mkdir /etc/dnsmasq
-        ExecStartPre=/usr/bin/mkdir /var/lib/tftproot
-        ExecStartPre=/usr/bin/wget -nc -q -O "/var/lib/tftproot/undionly.kpxe" "http://boot.ipxe.org/undionly.kpxe"
-        ExecStartPre=cp /var/lib/tftproot/undionly.kpxe /var/lib/tftproot/undionly.kpxe.0
         
         [Service]
         Environment="IMAGE=quay.io/coreos/dnsmasq"
         Environment="VERSION=v0.4.1"
+        ExecStartPre=/usr/bin/mkdir /etc/dnsmasq
+        ExecStartPre=/usr/bin/mkdir /var/lib/tftproot
+        ExecStartPre=/usr/bin/wget -nc -q -O "/var/lib/tftproot/undionly.kpxe" "http://boot.ipxe.org/undionly.kpxe"
+        ExecStartPre=cp /var/lib/tftproot/undionly.kpxe /var/lib/tftproot/undionly.kpxe.0
         ExecStart=/usr/bin/rkt run \
           --hostname=matchbox.drewfus.org \
           --net=host \
+          --inherit-env \
+          --trust-keys-from-https \
           --volume etc-dnsmasq,kind=host,source=/etc/dnsmasq \
           --volume tftproot,kind=host,source=/var/lib/tftproot \
           --mount volume=etc-dnsmasq,target=/etc/dnsmasq \
           --mount volume=tftproot,target=/var/lib/tftproot \
           ${IMAGE}:${VERSION} \
-          -- -d -C /etc/dnsmasq/dnsmasq.conf -R -S 8.8.8.8
+          -- -d -C /etc/dnsmasq.conf -R -S 8.8.8.8
         TimeoutStartSec=0
         Restart=always
         RestartSec=10
