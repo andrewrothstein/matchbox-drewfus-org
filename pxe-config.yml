@@ -137,7 +137,7 @@ storage:
           enable-tftp
           tftp-root=/var/lib/tftproot
 
-          dhcp-range=172.17.8.10,172.17.8.254,30m
+          dhcp-range=172.17.8.32,172.17.8.254,30m
 
           # static DNS assignements
           address=/matchbox.drewfus.org/172.17.8.1
@@ -149,8 +149,9 @@ storage:
           dhcp-option=3,172.17.8.1
 
           # assign fixed hostname and ip address to the nodes
-          #dhcp-host=00:50:56:20:AE:A6,node1,172.17.8.21,infinite
-          #dhcp-host=00:50:56:3C:0E:1A,node2,172.17.8.22,infinite
+          #dhcp-host=00:50:56:20:AE:A6,core-1,172.17.8.2,infinite
+          #dhcp-host=00:50:56:3C:0E:1A,core-2,172.17.8.3,infinite
+          #dhcp-host=00:50:56:3C:0E:1A,core-3,172.17.8.4,infinite
 
 passwd:
   users:
