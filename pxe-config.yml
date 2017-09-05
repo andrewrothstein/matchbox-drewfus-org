@@ -21,6 +21,64 @@ systemd:
   units:
     - name: iptables-restore.service
       enable: true
+    - name: lvm2-lvmetad.service
+      enable: true
+    - name: var-lib-rkt.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /var/lib/rkt
+        Before=matchbox.service dnsmasq.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/var-lib-rkt
+        Where=/var/lib/rkt
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
+    - name: var-lib-docker.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /var/lib/docker
+        Before=docker.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/var-lib-docker
+        Where=/var/lib/docker
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
+    - name: etc-matchbox.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /etc/matchbox
+        Before=matchbox.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/etc-matchbox
+        Where=/etc/matchbox
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
+    - name: var-lib-matchbox.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /var/lib/matchbox
+        Before=matchbox.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/var-lib-matchbox
+        Where=/etc/matchbox
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
     - name: matchbox.service
       enable: true
       contents: |
@@ -28,7 +86,7 @@ systemd:
         Description=CoreOS matchbox Server
         Documentation=https://github.com/coreos/matchbox
         Requires=network-online.target
-        After=network-online.target
+        After=network-online.target etc-matchbox.mount var-lib-matchbox.mount
 
         [Service]
         Slice=machine.slice
@@ -38,7 +96,6 @@ systemd:
         Environment="MATCHBOX_ADDRESS=0.0.0.0:8080"
         Environment="MATCHBOX_RPC_ADDRESS=0.0.0.0:8081"
         Environment="MATCHBOX_LOG_LEVEL=debug"
-        ExecStartPre=/usr/bin/mkdir -p /etc/matchbox
         ExecStartPre=/usr/bin/mkdir -p /var/lib/matchbox/assets
         ExecStart=/usr/bin/rkt run \
           --net=host \
@@ -54,6 +111,34 @@ systemd:
         
         [Install]
         WantedBy=multi-user.target
+    - name: etc-dnsmasq.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /etc/dnsmasq
+        Before=dnsmasq.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/etc-dnsmasq
+        Where=/etc/dnsmasq
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
+    - name: var-lib-tftproot.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount volume for /var/lib/tftproot
+        Before=dnsmasq.service
+
+        [Mount]
+        What=/dev/matchbox-drewfus-org/var-lib-tftproot
+        Where=/var/lib/tftproot
+        Type=ext4
+
+        [Install]
+        WantedBy = multi-user.target
     - name: dnsmasq.service
       enable: true
       contents: |
@@ -61,14 +146,13 @@ systemd:
         Description=dnsmasq
         # Wait for networking
         Requires=network-online.target
-        After=network-online.target
+        After=network-online.target etc-dnsmasq.mount var-lib-tftproot.mount
         
         [Service]
         Slice=machine.slice
         KillMode=mixed
         Environment="IMAGE=quay.io/coreos/dnsmasq"
         Environment="VERSION=v0.4.1"
-        ExecStartPre=/usr/bin/mkdir /var/lib/tftproot
         ExecStartPre=/usr/bin/wget -nc -q -O "/var/lib/tftproot/undionly.kpxe" "http://boot.ipxe.org/undionly.kpxe"
         ExecStartPre=cp /var/lib/tftproot/undionly.kpxe /var/lib/tftproot/undionly.kpxe.0
         ExecStart=/usr/bin/rkt run \
@@ -89,6 +173,32 @@ systemd:
         WantedBy=multi-user.target
 
 storage:
+  filesystems:
+    - name: etc-dnsmasq
+      mount:
+        device: /dev/matchbox-drewfus-org/etc-dnsmasq
+        format: ext4
+    - name: etc-matchbox
+      mount:
+        device: /dev/matchbox-drewfus-org/etc-matchbox
+        format: ext4
+    - name: var-lib-docker
+      mount:
+        device: /dev/matchbox-drewfus-org/var-lib-matchbox
+        format: ext4
+    - name: var-lib-matchbox
+      mount:
+        device: /dev/matchbox-drewfus-org/var-lib-matchbox
+        format: ext4
+    - name: var-lib-rkt
+      mount:
+        device: /dev/matchbox-drewfus-org/var-lib-rkt
+        format: ext4
+    - name: var-lib-tftproot
+      mount:
+        device: /dev/matchbox-drewfus-org/var-lib-tftproot
+        format: ext4
+        
   files:
     - filesystem: root
       path: /etc/hostname
@@ -116,7 +226,7 @@ storage:
           :OUTPUT ACCEPT [666:162244]
           COMMIT
           # Completed on Mon Sep  4 18:17:44 2017
-    - filesystem: root
+    - filesystem: etc-dnsmasq
       path: /etc/dnsmasq/dnsmasq.conf
       mode: 0644
       contents:
