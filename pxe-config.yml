@@ -23,34 +23,6 @@ systemd:
       enable: true
     - name: lvm2-lvmetad.service
       enable: true
-    - name: var-lib-rkt.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /var/lib/rkt
-        Before=matchbox.service dnsmasq.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/var-lib-rkt
-        Where=/var/lib/rkt
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
-    - name: var-lib-docker.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /var/lib/docker
-        Before=docker.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/var-lib-docker
-        Where=/var/lib/docker
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
     - name: etc-matchbox.mount
       enable: true
       contents: |
@@ -182,17 +154,9 @@ storage:
       mount:
         device: /dev/matchbox-drewfus-org/etc-matchbox
         format: ext4
-    - name: var-lib-docker
-      mount:
-        device: /dev/matchbox-drewfus-org/var-lib-matchbox
-        format: ext4
     - name: var-lib-matchbox
       mount:
         device: /dev/matchbox-drewfus-org/var-lib-matchbox
-        format: ext4
-    - name: var-lib-rkt
-      mount:
-        device: /dev/matchbox-drewfus-org/var-lib-rkt
         format: ext4
     - name: var-lib-tftproot
       mount:
@@ -251,17 +215,19 @@ storage:
 
           # static DNS assignements
           address=/matchbox.drewfus.org/172.17.8.1
-          address=/core-1.drewfus.org/172.17.8.2
-          address=/core-2.drewfus.org/172.17.8.3
-          address=/core-3.drewfus.org/172.17.8.4
+          address=/freenas.drewfus.org/172.17.8.2
+          address=/core-1.drewfus.org/172.17.8.3
+          address=/core-2.drewfus.org/172.17.8.4
+          address=/core-3.drewfus.org/172.17.8.5
 
           # default GW [node need external access to fetch containers]
           dhcp-option=3,172.17.8.1
 
           # assign fixed hostname and ip address to the nodes
-          #dhcp-host=00:50:56:20:AE:A6,core-1,172.17.8.2,infinite
-          #dhcp-host=00:50:56:3C:0E:1A,core-2,172.17.8.3,infinite
-          #dhcp-host=00:50:56:3C:0E:1A,core-3,172.17.8.4,infinite
+          dhcp-host=00:23:8b:17:4a:dd,freenas.drewfus.org,172.17.8.2,infinite
+          #dhcp-host=00:50:56:20:AE:A6,core-1.drewfus.org,172.17.8.3,infinite
+          #dhcp-host=00:50:56:3C:0E:1A,core-2.drewfus.org,172.17.8.4,infinite
+          #dhcp-host=00:50:56:3C:0E:1A,core-3.drewfus.org,172.17.8.5,infinite
 
 passwd:
   users:
