@@ -57,7 +57,7 @@ systemd:
         [Unit]
         Description=CoreOS matchbox Server
         Documentation=https://github.com/coreos/matchbox
-        Requires=network-online.target
+        Requires=network-online.target etc-matchbox.mount var-lib-matchbox.mount
         After=network-online.target etc-matchbox.mount var-lib-matchbox.mount
 
         [Service]
@@ -117,7 +117,7 @@ systemd:
         [Unit]
         Description=dnsmasq
         # Wait for networking
-        Requires=network-online.target
+        Requires=network-online.target etc-dnsmasq.mount var-lib-tftproot.mount
         After=network-online.target etc-dnsmasq.mount var-lib-tftproot.mount
         
         [Service]
