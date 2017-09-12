@@ -23,42 +23,14 @@ systemd:
       enable: true
     - name: lvm2-lvmetad.service
       enable: true
-    - name: etc-matchbox.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /etc/matchbox
-        Before=matchbox.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/etc-matchbox
-        Where=/etc/matchbox
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
-    - name: var-lib-matchbox.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /var/lib/matchbox
-        Before=matchbox.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/var-lib-matchbox
-        Where=/etc/matchbox
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
     - name: matchbox.service
       enable: true
       contents: |
         [Unit]
         Description=CoreOS matchbox Server
         Documentation=https://github.com/coreos/matchbox
-        Requires=network-online.target etc-matchbox.mount var-lib-matchbox.mount
-        After=network-online.target etc-matchbox.mount var-lib-matchbox.mount
+        Requires=network-online.target
+        After=network-online.target
 
         [Service]
         Slice=machine.slice
@@ -83,42 +55,14 @@ systemd:
         
         [Install]
         WantedBy=multi-user.target
-    - name: etc-dnsmasq.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /etc/dnsmasq
-        Before=dnsmasq.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/etc-dnsmasq
-        Where=/etc/dnsmasq
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
-    - name: var-lib-tftproot.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /var/lib/tftproot
-        Before=dnsmasq.service
-
-        [Mount]
-        What=/dev/matchbox-drewfus-org/var-lib-tftproot
-        Where=/var/lib/tftproot
-        Type=ext4
-
-        [Install]
-        WantedBy = multi-user.target
     - name: dnsmasq.service
       enable: true
       contents: |
         [Unit]
         Description=dnsmasq
         # Wait for networking
-        Requires=network-online.target etc-dnsmasq.mount var-lib-tftproot.mount
-        After=network-online.target etc-dnsmasq.mount var-lib-tftproot.mount
+        Requires=network-online.target
+        After=network-online.target
         
         [Service]
         Slice=machine.slice
