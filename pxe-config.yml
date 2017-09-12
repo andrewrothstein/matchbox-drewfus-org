@@ -23,26 +23,14 @@ systemd:
       enable: true
     - name: lvm2-lvmetad.service
       enable: true
-    - name: etc-matchbox.mount
-      enable: true
-      contents: |
-        [Unit]
-        Description=Mount volume for /etc/matchbox
-        Before=matchbox.service
-        [Mount]
-        What=/dev/matchbox-drewfus-org/etc-matchbox
-        Where=/etc/matchbox
-        Type=ext4
-        [Install]
-        WantedBy = multi-user.target
     - name: matchbox.service
       enable: true
       contents: |
         [Unit]
         Description=CoreOS matchbox Server
         Documentation=https://github.com/coreos/matchbox
-        Requires=network-online.target etc-matchbox.mount
-        After=network-online.target etc-matchbox.mount
+        Requires=network-online.target
+        After=network-online.target
 
         [Service]
         Slice=machine.slice
