@@ -89,11 +89,6 @@ systemd:
         WantedBy=multi-user.target
 
 storage:
-  filesystems:
-    - name: etc-matchbox
-      mount:
-        device: /dev/matchbox-drewfus-org/etc-matchbox
-        format: ext4
   files:
     - filesystem: root
       path: /etc/hostname
