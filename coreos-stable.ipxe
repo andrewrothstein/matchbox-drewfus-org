@@ -1,8 +1,88 @@
 #!ipxe
 
-dhcp
 set channel stable
+
+set menu-timeout 2000
+isset ${menu-default} || set menu-default stable-ign
+
+:start
+menu Please choose boot option...
+item --gap --             ------------------------- Channel ------------------------------
+item --key s stable-ign   Stable
+item --key b beta-ign     Beta
+item --key a alpha-ign	  Alpha
+item --gap --             ------------------------- Recover ------------------------------
+item --key i stable-rec   Stable Recovery
+item --key j beta-rec     Beta Recovery
+item --key i alpha-rec    Alpha Recovery
+item --gap --             ------------------------- Advanced options -------------------------------
+item --key c config       Configure settings
+item shell                Drop to iPXE shell
+item reboot               Reboot computer
+item
+item --key x exit         Exit iPXE and continue BIOS boot
+choose --timeout ${menu-timeout} --default ${menu-default} selected || goto cancel
+set menu-timeout 0
+goto ${selected}
+
+:cancel
+echo You cancelled the menu, dropping you to a shell
+
+:shell
+echo Type 'exit' to get the back to the menu
+shell
+set menu-timeout 0
+goto start
+
+:failed
+echo Booting failed, dropping to shell
+goto shell
+
+:reboot
+reboot
+
+:exit
+exit
+
+:config
+config
+goto start
+
+:stable-ign
+set channel stable
+goto ign-boot
+
+:beta-ign
+set channel beta
+goto ign-boot
+
+:alpha-ign
+set channel alphe
+goto ign-boot
+
+:stable-rec
+set channel stable
+goto rec-boot
+
+:beta-rec
+set channel beta
+goto rec-boot
+
+:alpha-rec
+set channel alpha
+goto rec-boot
+
+:rec-boot
+dhcp
 set base-url http://${channel}.release.core-os.net/amd64-usr/current
-kernel ${base-url}/coreos_production_pxe.vmlinuz initrd=coreos_production_pxe_image.cpio.gz coreos.first_boot=1 coreos.config.url=https://raw.githubusercontent.com/andrewrothstein/matchbox-drewfus-org/master/pxe-config.ign
+kernel ${base-url}/coreos_production_pxe.vmlinuz initrd=coreos_production_pxe_image.cpio.gz coreos.console=tty1 coreos.console=ttyS0 coreos.autologin=tty1 coreos.autologin=ttyS0
 initrd ${base-url}/coreos_production_pxe_image.cpio.gz
-boot
+boot || goto failed
+
+:ign-boot
+dhcp
+set ignition-url https://raw.githubusercontent.com/andrewrothstein/matchbox-drewfus-org/master/pxe-config.ign
+set base-url http://${channel}.release.core-os.net/amd64-usr/current
+kernel ${base-url}/coreos_production_pxe.vmlinuz initrd=coreos_production_pxe_image.cpio.gz coreos.first_boot=1 coreos.config.url=${ignition-url}
+initrd ${base-url}/coreos_production_pxe_image.cpio.gz
+boot || goto failed
