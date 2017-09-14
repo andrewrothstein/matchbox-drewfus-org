@@ -1,7 +1,8 @@
 #!ipxe
 
 dhcp
-set base-url http://stable.release.core-os.net/amd64-usr/current
+set channel stable
+set base-url http://${channel}.release.core-os.net/amd64-usr/current
 kernel ${base-url}/coreos_production_pxe.vmlinuz initrd=coreos_production_pxe_image.cpio.gz coreos.first_boot=1 coreos.config.url=https://raw.githubusercontent.com/andrewrothstein/matchbox-drewfus-org/master/pxe-config.ign
 initrd ${base-url}/coreos_production_pxe_image.cpio.gz
 boot
