@@ -4,14 +4,14 @@ hostname: matchbox.drewfus.org
 rancher:
   network:
     interfaces:
-      eth0:
+      eth1:
+        dhcp: true
+      eth2:
         address: 192.168.3.1/24
         gateway: 192.168.1.1
         dhcp: false
-      eth1:
-        dhcp: true
     post_cmds:
-      - /sbin/iptables -A FORWARD -i eth0 -j ACCEPT
+      - /sbin/iptables -A FORWARD -i eth2 -j ACCEPT
       - /sbin/iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
 
 ssh_authorized_keys:
