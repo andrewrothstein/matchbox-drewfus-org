@@ -10,6 +10,9 @@ rancher:
         dhcp: false
       eth1:
         dhcp: true
+    post_cmds:
+      - /sbin/iptables -A FORWARD -i eth0 -j ACCEPT
+      - /sbin/iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
 
 ssh_authorized_keys:
   - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDQ7y6mufZ+NWDZbKnCmGh0HqTIZq46CRMmwP84gslG8Zkb2/ERnMwp0pv2DWuERAsGK1A5t4Xvqn05QcK40MWXr31nJyfOWOHIBAs8z3ew3d9zTkVsPFPqHsuK8urF8N/HvtQ0L9YflvbTB0aFZ5LhwO7JnlZWuzKJz4ftupoHBYp0H9KSyPgBkV90y+3BXanKJTUVPnni9tlpOk5oiEO4LJj5a5bpERhM3U2B01yCBT+sgwiiPTikacsrUTHNpm+ENktT+hOomlAQ3JLynmHA0Xx9aTz75ayWPz6h/Cl+PQ6lpTs6OydQtWRRzB5fuKqK0kmntlpBWjeH1Ft10WaW/fT8Gb4HeTmzgLJZsiUZiR3wrVXT8WWRP9gfhH5lEbIzwG0yqAf6Ri/8E9qcmvRJtrtbNP0u80njJywQAXOnWX88lZ32cR2esAeMiVwQbDblRLi5qPZJKGLeq/6bTKN0rC6/4+8jAVGpdfHS4OJoCCQ2jiMXUJRab5BV+txyyhzk0R5Wo00FXOoWaYN1IWUBUqPRH4wVwJJe+0YLaeC6pTDMMb3/dVN53tRqchEXqCOQiLKq2HjdrRs/oxpFwBhWg43Rrc1wkGSFdXs88Lo+/Clqp4gZUGaDOCIitkxN98HV12eEhZbknitfETd+IMv/rgNEsghVkgZ7CRRtUs4nAw== drew@Andrews-MacBook-Pro-2.local
